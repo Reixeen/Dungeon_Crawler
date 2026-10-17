@@ -119,8 +119,12 @@ impl Player<'_> {
             ("largeroom", "northeast") | ("sideroom", "west") => self.room = &ROOM4,
             ("room4", "north") => self.room = &EXIT,
             ("room4", "east") => self.room = &SIDEROOM,
-            (_, _) => println!("That is not a valid room"), // Pattern for if trying to go to a room that is not connected to the current room
+            (_, _) => {
+                println!("That is not a valid room");
+                return; // Pattern for if trying to go to a room that is not connected to the current room
+            }
         }
+        println!("{}", self.room.description.clone());
     }
 
     fn use_item(&self) {
@@ -200,9 +204,9 @@ fn second_word(s: &str) -> &str {
 
 fn main() {
     let mut player = Player::new();
+    println!("{}", player.room.description.clone());
 
     loop {
-        println!("{}", player.room.description.clone());
         let mut desired_action: String = String::new();
 
         io::stdin()
