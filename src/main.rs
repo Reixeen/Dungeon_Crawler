@@ -6,11 +6,7 @@ static ENTRANCE: Room = Room {
     name: LazyLock::new(|| String::from("entrance")),
     description: LazyLock::new(|| {
         String::from(
-            "You find yourself inside a small circular room made of darkness and stone slab walls.
-        Above; the square of light from which you fell.
-        And below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.
-        
-        There is an open archway to the South.
+            "You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South.
         ",
         )
     }),
@@ -22,11 +18,7 @@ static ROOM2: Room = Room {
     name: LazyLock::new(|| String::from("room2")),
     description: LazyLock::new(|| {
         String::from(
-            "
-        You find yourself inside a square stone-slabbed room.
-        There is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.
-        
-        There is an exit to the South.",
+            "You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South.",
         )
     }),
 
@@ -37,10 +29,7 @@ static LARGEROOM: Room = Room {
     name: LazyLock::new(|| String::from("largeroom")),
     description: LazyLock::new(|| {
         String::from(
-            "
-        You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.
-        There is a long table in the centre of the room, reaching almost to each end.
-        It has many empty plates and tipped wooden cups.
+            "You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.\nThere is a long table in the centre of the room, reaching almost to each end.\nIt has many empty plates and tipped wooden cups.
 
         How did they get all of this down here??
         
@@ -55,12 +44,9 @@ static ROOM4: Room = Room {
     name: LazyLock::new(|| String::from("room4")),
     description: LazyLock::new(|| {
         String::from(
-            "You find yourself inside a square room with stone-slabbed walls.
-        There is a message on the wall, written in oxidised brown blood:
+            "You find yourself inside a square room with stone-slabbed walls.\nThere is a message on the wall, written in oxidised brown blood:
 
-        'YOU ARE ALREADY DEAD'
-        
-        There are exits to the North, South, and East.",
+        'YOU ARE ALREADY DEAD'\nThere are exits to the North, South, and East.",
         )
     }),
 
@@ -71,11 +57,7 @@ static SIDEROOM: Room = Room {
     name: LazyLock::new(|| String::from("sideroom")),
     description: LazyLock::new(|| {
         String::from(
-            "You find yourself inside a square room with stone-slabbed walls.
-        This is the most barren of all the rooms.
-        There is naught but bones.        
-        
-        There is an exit to the West",
+            "You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",
         )
     }),
 
@@ -95,11 +77,7 @@ static EXIT: Room = Room {
     name: LazyLock::new(|| String::from("exit")),
     description: LazyLock::new(|| {
         String::from(
-            "You find yourself inside a circular room with stone-slabbed walls.
-        There are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.
-        You feel a slight chilling breeze coming from the north wall.
-        
-        There is an exit to the South",
+            "You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South",
         )
     }),
 
@@ -111,17 +89,6 @@ static EXIT: Room = Room {
             )
     }),
 };
-
-/* enum Rooms {
-    // All possible room states
-    ENTRANCE {"entrance"},
-    ROOM2,
-    LARGEROOM,
-    ROOM4,
-    SIDEROOM,
-    EXIT,
-}
-//use Rooms: */
 
 struct Room {
     name: LazyLock<String>,
@@ -165,7 +132,7 @@ impl Player<'_> {
             Until it does and the wall opens up on a swivel!
             "
             );
-            exit(5);
+            exit(0);
         }
     }
 
@@ -237,7 +204,6 @@ fn main() {
     loop {
         println!("{}", player.room.description.clone());
         let mut desired_action: String = String::new();
-        println!("What action do you take?");
 
         io::stdin()
             .read_line(&mut desired_action)
