@@ -81,6 +81,7 @@ impl Player {
                 return; // Pattern for if trying to go to a room that is not connected to the current room
             }
         }
+        println!("{}\n", self.room.description);
     }
 
     fn use_item(&self) {
@@ -165,9 +166,10 @@ fn second_word(s: &str) -> &str {
 
 fn main() {
     let mut player = Player::new();
+    println!("{}\n", player.room.description);
 
     loop {
-        println!("{}\n", player.room.description);
+        
         let mut desired_action: String = String::new();
 
         io::stdin()
