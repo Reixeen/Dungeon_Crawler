@@ -1,148 +1,100 @@
 use std::io;
 use std::process::exit;
-use std::sync::LazyLock;
+
+#[derive(Clone)]
+pub struct Room {
+    name: &'static str, // static 
+    description: &'static str, // general description of the room
+    investigation_text: &'static str,
+}
 
 static ENTRANCE: Room = Room {
-    name: LazyLock::new(|| String::from("entrance")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South.
-        ",
-        )
-    }),
+    name: "Entrance",
+    description: "You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South.",
+    investigation_text: "You find nothing of note"
+    };
 
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
-
-static ROOM2: Room = Room {
-    name: LazyLock::new(|| String::from("room2")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South.",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
+static ROOM2:Room = Room {
+    name: "Room2",
+    description: "You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South.",
+    investigation_text: "You find nothing of note",
+    };
 
 static LARGEROOM: Room = Room {
-    name: LazyLock::new(|| String::from("largeroom")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.\nThere is a long table in the centre of the room, reaching almost to each end.\nIt has many empty plates and tipped wooden cups.
-
-        How did they get all of this down here??
-        
-        There are exits to the northwest and northeast.",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
-
+    name: "Largeroom",
+    description: "You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.\nThere is a long table in the centre of the room, reaching almost to each end.\nIt has many empty plates and tipped wooden cups.\nHow did they get all of this down here??\nThere are exits to the northwest and northeast.",
+    investigation_text: "You find nothing of note",
+    };
+    
 static ROOM4: Room = Room {
-    name: LazyLock::new(|| String::from("room4")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a square room with stone-slabbed walls.\nThere is a message on the wall, written in oxidised brown blood:
-
-        'YOU ARE ALREADY DEAD'\nThere are exits to the North, South, and East.",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
+    name: "Room4",
+    description: "You find yourself inside a square room with stone-slabbed walls.\nThere is a message on the wall, written in oxidised brown blood:\n'YOU ARE ALREADY DEAD'\nThere are exits to the North, South, and East.",
+    investigation_text: "You find nothing of note",
+    };
 
 static SIDEROOM: Room = Room {
-    name: LazyLock::new(|| String::from("sideroom")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| {
-        String::from(
-            "
-            One brick seems outlined with cleanliness.
-            You take a closer look and find that it is loose.
-            With a firm grip you dislodge the brick and find a key.
-            You place this in your pocket.
-            ",
-        )
-    }),
-};
+    name: "Sideroom",
+    description: "You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",
+    investigation_text: "One brick seems outlined with cleanliness.\nYou take a closer look and find that it is loose.\nWith a firm grip you dislodge the brick and find a key.\nYou place this in your pocket.\n",
+    };
 
 static EXIT: Room = Room {
-    name: LazyLock::new(|| String::from("exit")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| {
-        String::from("
-            Using the moisture clung to your skin, following the light wind, you find that one particular crack is hiding a secret.
-            There is no peep of light, but perhaps something thin could be squeezed in?
-            ",
-            )
-    }),
-};
-
-struct Room {
-    name: LazyLock<String>,
-    description: LazyLock<String>, // general description of the room
-    investigation_text: LazyLock<String>,
-}
-
-struct Player<'a> {
-    room: &'a Room,
+    name: "Exit",
+    description: "You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South",
+    investigation_text: "Using the moisture clung to your skin, following the light wind, you find that one particular crack is hiding a secret.\nThere is no peep of light, but perhaps something thin could be squeezed in?",
+    };
+    
+struct Player {
+    room: Room,
     key_in_inventory: bool,
-}
-
-impl Player<'_> {
+}        
+impl Player {
     fn new() -> Self {
         Self {
-            room: &ENTRANCE,
+            room: ENTRANCE.clone(),
             key_in_inventory: false,
         }
     }
 
     fn change_room(&mut self, desired_direction: &str) {
-        let room_name = self.room.name.as_str();
+        let room_name = self.room.name;
         match (room_name, desired_direction) {
             // All valid room transitions listed
-            ("room2", "north") => self.room = &ENTRANCE,
-            ("room2" | "room4", "south") => self.room = &LARGEROOM,
-            ("entrance", "south") | ("largeroom", "northwest") => self.room = &ROOM2,
-            ("largeroom", "northeast") | ("sideroom", "west") => self.room = &ROOM4,
-            ("room4", "north") => self.room = &EXIT,
-            ("room4", "east") => self.room = &SIDEROOM,
+            ("Room2", "north")                                                     => self.room = ENTRANCE.clone(),
+            ("Room2" | "Room4", "south")                                           => self.room = LARGEROOM.clone(),
+            ("Entrance", "south") | ("Largeroom", "northwest")                     => self.room = ROOM2.clone(),
+            ("Largeroom", "northeast") | ("Sideroom", "west")  | ("Exit", "south") => self.room = ROOM4.clone(),
+            ("Room4", "north")                                                     => self.room = EXIT.clone(),
+            ("Room4", "east")                                                      => self.room = SIDEROOM.clone(),
             (_, _) => {
                 println!("That is not a valid room");
                 return; // Pattern for if trying to go to a room that is not connected to the current room
             }
         }
-        println!("{}", self.room.description.clone());
+        println!("{}\n", self.room.description);
     }
 
     fn use_item(&self) {
-        if self.key_in_inventory && self.room.name.clone() == "exit" {
+        if self.key_in_inventory && self.room.name == "Exit" {
             println!(
                 "
             You put the key into the crack with an expectant grunt.
             Nothing happens...
             Until it does and the wall opens up on a swivel!
+
+            CONGRATULATIONS
             "
             );
-            exit(0);
-        }
+            exit(0)
+        } else {
+            println!("You have nothing to use here")
+        };
     }
+    
 
     fn investigate(&mut self) {
-        println!("{:?}", self.room.investigation_text.clone());
-        if self.room.name.clone() == "sideroom" {
+        println!("{}",self.room.investigation_text);
+        if self.room.name == "Sideroom" {
             self.key_in_inventory = true;
         }
     }
@@ -172,8 +124,8 @@ impl Player<'_> {
             "investigate" => self.investigate(),
             "use" => self.use_item(),
             "inventory" => self.inventory(),
-            "help" => Player::<'_>::help(),
-            _ => println!("Invalid "),
+            "help" => Player::help(),
+            _ => println!("Invalid action. Please try again."),
         }
     }
 }
@@ -204,16 +156,17 @@ fn second_word(s: &str) -> &str {
 
 fn main() {
     let mut player = Player::new();
-    println!("{}", player.room.description.clone());
+    println!("{}\n", player.room.description);
 
     loop {
+        
         let mut desired_action: String = String::new();
 
         io::stdin()
             .read_line(&mut desired_action)
             .expect("Failed to read line");
 
-        let desired_action: String = match desired_action.trim().parse() {
+        let desired_action: String = match desired_action.to_lowercase().trim().parse() {
             Ok(num) => num,
             Err(_) => continue,
         };
