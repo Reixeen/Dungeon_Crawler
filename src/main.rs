@@ -14,6 +14,7 @@ pub enum MovementDirection {
     West,
     Northeast,
     Northwest,
+    Nowhere,
     Southeast, // unused with this dungeon layout
     Southwest, // unused with this dungeon layout
 }
@@ -185,7 +186,7 @@ fn find_intended_direction(desired_direction: &str) -> MovementDirection {
         "southwest" => Southwest,
         _ => {
             println!("That is not a valid direction");
-            North
+            Nowhere
         }
     }
 }
