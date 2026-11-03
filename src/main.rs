@@ -2,6 +2,7 @@ use std::io;
 use std::process::exit;
 use std::sync::LazyLock;
 
+// defining the contents of all of the rooms
 static ENTRANCE: Room = Room {
     name: LazyLock::new(|| String::from("entrance")),
     description: LazyLock::new(|| {
@@ -121,7 +122,7 @@ impl Player<'_> {
             ("room4", "east") => self.room = &SIDEROOM,
             (_, _) => {
                 println!("That is not a valid room");
-                return; // Pattern for if trying to go to a room that is not connected to the current room
+                return; // Exit if invalid
             }
         }
         println!("{}", self.room.description.clone());
@@ -158,11 +159,11 @@ impl Player<'_> {
     fn help() {
         println!(
             "
-        investigate, // Investigate the room for useful information + clues
-        go,          // Go to a different room
-        use,         // Open a door or container
-        inventory,   // View contents of inventory
-        help,        // View this menu"
+        investigate,    // Investigate the room for useful information + clues
+        go [direction], // Go to the room in [direction] i.e: northeast
+        use,            // Use item in inventory
+        inventory,      // View contents of inventory
+        help,           // View this menu"
         );
     }
 
@@ -173,7 +174,7 @@ impl Player<'_> {
             "use" => self.use_item(),
             "inventory" => self.inventory(),
             "help" => Player::<'_>::help(),
-            _ => println!("Invalid "),
+            _ => println!("Invalid action"),
         }
     }
 }
