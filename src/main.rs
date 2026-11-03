@@ -1,81 +1,100 @@
+use std::collections::HashMap;
 use std::io;
 use std::process::exit;
 
-#[derive(Clone)]
-pub struct Room {
-    name: &'static str, // static 
-    description: &'static str, // general description of the room
-    investigation_text: &'static str,
+use crate::AllRooms::*;
+use crate::MovementDirection::*;
+
+#[derive(Clone,PartialEq, Eq, Hash)]
+pub enum MovementDirection { // all possible directions that rooms can have doors in
+    North,
+    South,
+    East,
+    West,
+    Northeast,
+    Northwest,
+    Southeast, // unused with this dungeon layout
+    Southwest, // unused with this dungeon layout
 }
 
-static ENTRANCE: Room = Room {
-    name: "Entrance",
-    description: "You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South.",
-    investigation_text: "You find nothing of note"
-    };
+#[derive(Clone,PartialEq, Eq)]
+pub enum AllRooms { // all rooms in the current dungeon layout
+    Entrance,
+    Room2,
+    Largeroom,
+    Room4,
+    Sideroom,
+    Exit,
+}
 
-static ROOM2:Room = Room {
-    name: "Room2",
-    description: "You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South.",
-    investigation_text: "You find nothing of note",
-    };
+impl AllRooms{
+    // return a hashmap of contains sets of (door direction, room that is through that door)
+    fn find_valid_exits(&self) -> HashMap<MovementDirection, AllRooms>{
+        match self {
+            Entrance  => return HashMap::from([(South, Room2)]),
+            Room2     => return HashMap::from([(North, Entrance), (South, Largeroom)]),
+            Largeroom => return HashMap::from([(Northwest, Room2),(Northeast, Room4)]),
+            Room4     => return HashMap::from([(South, Largeroom),(East,Sideroom),(North, Exit)]),
+            Sideroom  => return HashMap::from([(West, Room4)]),
+            Exit      => return HashMap::from([(South, Room4)]),
+        }
+    }
 
-static LARGEROOM: Room = Room {
-    name: "Largeroom",
-    description: "You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.\nThere is a long table in the centre of the room, reaching almost to each end.\nIt has many empty plates and tipped wooden cups.\nHow did they get all of this down here??\nThere are exits to the northwest and northeast.",
-    investigation_text: "You find nothing of note",
-    };
+    fn print_description(&self){ // 
+        let mut description: String = "".to_string();
+        
+        match self {
+            Entrance  => description.push_str("You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South."),
+            Room2     => description.push_str("You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South."),
+            Largeroom => description.push_str("You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.\nThere is a long table in the centre of the room, reaching almost to each end.\nIt has many empty plates and tipped wooden cups.\nHow did they get all of this down here??\nThere are exits to the northwest and northeast."),
+            Room4     => description.push_str("You find yourself inside a square room with stone-slabbed walls.\nThere is a message on the wall, written in oxidised brown blood:\n'YOU ARE ALREADY DEAD'\nThere are exits to the North, South, and East."),
+            Sideroom  => description.push_str("You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",),
+            Exit      => description.push_str("You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South"),
+        }
+        println!("{description}")
+    }
+
+
+    fn print_investigation(&self) {
+        let mut description: String = "".to_string();
+        
+        match self {
+            Sideroom  => description.push_str("One brick seems outlined with cleanliness.\nYou take a closer look and find that it is loose.\nWith a firm grip you dislodge the brick and find a key.\nYou place this in your pocket.\n"),
+            Exit      => description.push_str("Using the moisture clung to your skin, following the light wind, you find that one particular crack is hiding a secret.\nThere is no peep of light, but perhaps something thin could be squeezed in?"),
+            _         => description.push_str("You find nothing of note"),
+        }
+        println!("{description}")
+    }
+}
+
+#[derive(Clone,PartialEq, Eq)]
     
-static ROOM4: Room = Room {
-    name: "Room4",
-    description: "You find yourself inside a square room with stone-slabbed walls.\nThere is a message on the wall, written in oxidised brown blood:\n'YOU ARE ALREADY DEAD'\nThere are exits to the North, South, and East.",
-    investigation_text: "You find nothing of note",
-    };
-
-static SIDEROOM: Room = Room {
-    name: "Sideroom",
-    description: "You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",
-    investigation_text: "One brick seems outlined with cleanliness.\nYou take a closer look and find that it is loose.\nWith a firm grip you dislodge the brick and find a key.\nYou place this in your pocket.\n",
-    };
-
-static EXIT: Room = Room {
-    name: "Exit",
-    description: "You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South",
-    investigation_text: "Using the moisture clung to your skin, following the light wind, you find that one particular crack is hiding a secret.\nThere is no peep of light, but perhaps something thin could be squeezed in?",
-    };
-    
-struct Player {
-    room: Room,
+pub struct Player {
+    room: AllRooms,
     key_in_inventory: bool,
-}        
+}
+
 impl Player {
     fn new() -> Self {
         Self {
-            room: ENTRANCE.clone(),
+            room: Entrance,
             key_in_inventory: false,
         }
     }
 
     fn change_room(&mut self, desired_direction: &str) {
-        let room_name = self.room.name;
-        match (room_name, desired_direction) {
-            // All valid room transitions listed
-            ("Room2", "north")                                                     => self.room = ENTRANCE.clone(),
-            ("Room2" | "Room4", "south")                                           => self.room = LARGEROOM.clone(),
-            ("Entrance", "south") | ("Largeroom", "northwest")                     => self.room = ROOM2.clone(),
-            ("Largeroom", "northeast") | ("Sideroom", "west")  | ("Exit", "south") => self.room = ROOM4.clone(),
-            ("Room4", "north")                                                     => self.room = EXIT.clone(),
-            ("Room4", "east")                                                      => self.room = SIDEROOM.clone(),
-            (_, _) => {
-                println!("That is not a valid room");
-                return; // Pattern for if trying to go to a room that is not connected to the current room
+        let desired_direction = find_intended_direction(desired_direction);
+        for (direction, new_room) in self.room.find_valid_exits() {
+            if direction == desired_direction {
+                self.room = new_room;
+                self.room.print_description(); 
             }
         }
-        println!("{}\n", self.room.description);
     }
 
+
     fn use_item(&self) {
-        if self.key_in_inventory && self.room.name == "Exit" {
+        if self.key_in_inventory && self.room == Exit {
             println!(
                 "
             You put the key into the crack with an expectant grunt.
@@ -90,11 +109,10 @@ impl Player {
             println!("You have nothing to use here")
         };
     }
-    
 
     fn investigate(&mut self) {
-        println!("{}",self.room.investigation_text);
-        if self.room.name == "Sideroom" {
+        self.room.print_investigation();
+        if self.room == Sideroom {
             self.key_in_inventory = true;
         }
     }
@@ -154,12 +172,28 @@ fn second_word(s: &str) -> &str {
     s
 }
 
+fn find_intended_direction(desired_direction: &str) -> MovementDirection {
+    match desired_direction {
+        "north" => North,
+        "south" => South,
+        "east" => East,
+        "west" => West,
+        "northeast" => Northeast,
+        "northwest" => Northwest,
+        "southeast" => Southeast,
+        "southwest" => Southwest,
+        _ => {
+            println!("That is not a valid direction");
+            North
+        }
+    }
+}
+
 fn main() {
     let mut player = Player::new();
-    println!("{}\n", player.room.description);
+    player.room.print_description();
 
     loop {
-        
         let mut desired_action: String = String::new();
 
         io::stdin()
