@@ -5,8 +5,9 @@ use std::process::exit;
 use crate::AllRooms::*;
 use crate::MovementDirection::*;
 
-#[derive(Clone,PartialEq, Eq, Hash)]
-pub enum MovementDirection { // all possible directions that rooms can have doors in
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum MovementDirection {
+    // all possible directions that rooms can have doors in
     North,
     South,
     East,
@@ -17,8 +18,9 @@ pub enum MovementDirection { // all possible directions that rooms can have door
     Southwest, // unused with this dungeon layout
 }
 
-#[derive(Clone,PartialEq, Eq)]
-pub enum AllRooms { // all rooms in the current dungeon layout
+#[derive(Clone, PartialEq, Eq)]
+pub enum AllRooms {
+    // all rooms in the current dungeon layout
     Entrance,
     Room2,
     Largeroom,
@@ -27,22 +29,23 @@ pub enum AllRooms { // all rooms in the current dungeon layout
     Exit,
 }
 
-impl AllRooms{
+impl AllRooms {
     // return a hashmap of contains sets of (door direction, room that is through that door)
-    fn find_valid_exits(&self) -> HashMap<MovementDirection, AllRooms>{
+    fn find_valid_exits(&self) -> HashMap<MovementDirection, AllRooms> {
         match self {
-            Entrance  => return HashMap::from([(South, Room2)]),
-            Room2     => return HashMap::from([(North, Entrance), (South, Largeroom)]),
-            Largeroom => return HashMap::from([(Northwest, Room2),(Northeast, Room4)]),
-            Room4     => return HashMap::from([(South, Largeroom),(East,Sideroom),(North, Exit)]),
-            Sideroom  => return HashMap::from([(West, Room4)]),
-            Exit      => return HashMap::from([(South, Room4)]),
+            Entrance => HashMap::from([(South, Room2)]),
+            Room2 => HashMap::from([(North, Entrance), (South, Largeroom)]),
+            Largeroom => HashMap::from([(Northwest, Room2), (Northeast, Room4)]),
+            Room4 => HashMap::from([(South, Largeroom), (East, Sideroom), (North, Exit)]),
+            Sideroom => HashMap::from([(West, Room4)]),
+            Exit => HashMap::from([(South, Room4)]),
         }
     }
 
-    fn print_description(&self){ // 
-        let mut description: String = "".to_string();
-        
+    fn print_description(&self) {
+        //
+        let mut description: String = String::new();
+
         match self {
             Entrance  => description.push_str("You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South."),
             Room2     => description.push_str("You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South."),
@@ -51,24 +54,23 @@ impl AllRooms{
             Sideroom  => description.push_str("You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",),
             Exit      => description.push_str("You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South"),
         }
-        println!("{description}")
+        println!("{description}");
     }
 
-
     fn print_investigation(&self) {
-        let mut description: String = "".to_string();
-        
+        let mut description: String = String::new();
+
         match self {
             Sideroom  => description.push_str("One brick seems outlined with cleanliness.\nYou take a closer look and find that it is loose.\nWith a firm grip you dislodge the brick and find a key.\nYou place this in your pocket.\n"),
             Exit      => description.push_str("Using the moisture clung to your skin, following the light wind, you find that one particular crack is hiding a secret.\nThere is no peep of light, but perhaps something thin could be squeezed in?"),
             _         => description.push_str("You find nothing of note"),
         }
-        println!("{description}")
+        println!("{description}");
     }
 }
 
-#[derive(Clone,PartialEq, Eq)]
-    
+#[derive(Clone, PartialEq, Eq)]
+
 pub struct Player {
     room: AllRooms,
     key_in_inventory: bool,
@@ -87,11 +89,10 @@ impl Player {
         for (direction, new_room) in self.room.find_valid_exits() {
             if direction == desired_direction {
                 self.room = new_room;
-                self.room.print_description(); 
+                self.room.print_description();
             }
         }
     }
-
 
     fn use_item(&self) {
         if self.key_in_inventory && self.room == Exit {
@@ -106,8 +107,8 @@ impl Player {
             );
             exit(0)
         } else {
-            println!("You have nothing to use here")
-        };
+            println!("You have nothing to use here");
+        }
     }
 
     fn investigate(&mut self) {
@@ -142,7 +143,7 @@ impl Player {
             "investigate" => self.investigate(),
             "use" => self.use_item(),
             "inventory" => self.inventory(),
-            "help" => Player::help(),
+            "help" => Self::help(),
             _ => println!("Invalid action. Please try again."),
         }
     }
