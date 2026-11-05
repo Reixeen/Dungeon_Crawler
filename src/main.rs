@@ -14,7 +14,6 @@ pub enum MovementDirection {
     West,
     Northeast,
     Northwest,
-    Nowhere,
     Southeast, // unused with this dungeon layout
     Southwest, // unused with this dungeon layout
 }
@@ -78,7 +77,7 @@ pub struct Player {
 }
 
 impl Player {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             room: Entrance,
             key_in_inventory: false,
@@ -86,12 +85,23 @@ impl Player {
     }
 
     fn change_room(&mut self, desired_direction: &str) {
-        let desired_direction = find_intended_direction(desired_direction);
-        for (direction, new_room) in self.room.find_valid_exits() {
-            if direction == desired_direction {
-                self.room = new_room;
-                self.room.print_description();
+        // user inputs a direction after "go" command => go [direction]
+        let desired_direction = find_intended_direction(&desired_direction.replace(' ', "")); // map the [direction] to an Result<MovementDirection> variant
+
+        match desired_direction {
+            // match the Result<>
+            Ok(desired_direction) => {
+                // valid MovementDirection
+                for (valid_direction, new_room) in self.room.find_valid_exits() {
+                    // get hashmap of tuples of (valid exit, room that is through that exit)
+                    if valid_direction == desired_direction {
+                        self.room = new_room;
+                        self.room.print_description();
+                    }
+                }
+                println!("There is no door in that direction."); // valid input but no applicable exits
             }
+            Err(msg) => println!("{msg}"), // user input gibberish direction
         }
     }
 
@@ -174,20 +184,17 @@ fn second_word(s: &str) -> &str {
     s
 }
 
-fn find_intended_direction(desired_direction: &str) -> MovementDirection {
+fn find_intended_direction(desired_direction: &str) -> Result<MovementDirection, &'static str> {
     match desired_direction {
-        "north" => North,
-        "south" => South,
-        "east" => East,
-        "west" => West,
-        "northeast" => Northeast,
-        "northwest" => Northwest,
-        "southeast" => Southeast,
-        "southwest" => Southwest,
-        _ => {
-            println!("That is not a valid direction");
-            Nowhere
-        }
+        "north" => Ok(North),
+        "south" => Ok(South),
+        "east" => Ok(East),
+        "west" => Ok(West),
+        "northeast" => Ok(Northeast),
+        "northwest" => Ok(Northwest),
+        "southeast" => Ok(Southeast),
+        "southwest" => Ok(Southwest),
+        _ => Err("That is not a valid direction. Please try again."),
     }
 }
 
