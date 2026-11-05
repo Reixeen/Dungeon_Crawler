@@ -1,149 +1,130 @@
+use std::collections::HashMap;
 use std::io;
 use std::process::exit;
-use std::sync::LazyLock;
 
-// defining the contents of all of the rooms
-static ENTRANCE: Room = Room {
-    name: LazyLock::new(|| String::from("entrance")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South.
-        ",
-        )
-    }),
+use crate::AllRooms::*;
+use crate::MovementDirection::*;
 
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
-
-static ROOM2: Room = Room {
-    name: LazyLock::new(|| String::from("room2")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South.",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
-
-static LARGEROOM: Room = Room {
-    name: LazyLock::new(|| String::from("largeroom")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.\nThere is a long table in the centre of the room, reaching almost to each end.\nIt has many empty plates and tipped wooden cups.
-
-        How did they get all of this down here??
-        
-        There are exits to the northwest and northeast.",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
-
-static ROOM4: Room = Room {
-    name: LazyLock::new(|| String::from("room4")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a square room with stone-slabbed walls.\nThere is a message on the wall, written in oxidised brown blood:
-
-        'YOU ARE ALREADY DEAD'\nThere are exits to the North, South, and East.",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| String::from("You find nothing of note")),
-};
-
-static SIDEROOM: Room = Room {
-    name: LazyLock::new(|| String::from("sideroom")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| {
-        String::from(
-            "
-            One brick seems outlined with cleanliness.
-            You take a closer look and find that it is loose.
-            With a firm grip you dislodge the brick and find a key.
-            You place this in your pocket.
-            ",
-        )
-    }),
-};
-
-static EXIT: Room = Room {
-    name: LazyLock::new(|| String::from("exit")),
-    description: LazyLock::new(|| {
-        String::from(
-            "You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South",
-        )
-    }),
-
-    investigation_text: LazyLock::new(|| {
-        String::from("
-            Using the moisture clung to your skin, following the light wind, you find that one particular crack is hiding a secret.
-            There is no peep of light, but perhaps something thin could be squeezed in?
-            ",
-            )
-    }),
-};
-
-struct Room {
-    name: LazyLock<String>,
-    description: LazyLock<String>, // general description of the room
-    investigation_text: LazyLock<String>,
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub enum MovementDirection {
+    // all possible directions that rooms can have doors in
+    North,
+    South,
+    East,
+    West,
+    Northeast,
+    Northwest,
+    Southeast, // unused with this dungeon layout
+    Southwest, // unused with this dungeon layout
 }
 
-struct Player<'a> {
-    room: &'a Room,
+#[derive(Clone, PartialEq, Eq)]
+pub enum AllRooms {
+    // all rooms in the current dungeon layout
+    Entrance,
+    Room2,
+    Largeroom,
+    Room4,
+    Sideroom,
+    Exit,
+}
+
+impl AllRooms {
+    // return a hashmap of contains sets of (door direction, room that is through that door)
+    fn find_valid_exits(&self) -> HashMap<MovementDirection, AllRooms> {
+        match self {
+            Entrance => HashMap::from([(South, Room2)]),
+            Room2 => HashMap::from([(North, Entrance), (South, Largeroom)]),
+            Largeroom => HashMap::from([(Northwest, Room2), (Northeast, Room4)]),
+            Room4 => HashMap::from([(South, Largeroom), (East, Sideroom), (North, Exit)]),
+            Sideroom => HashMap::from([(West, Room4)]),
+            Exit => HashMap::from([(South, Room4)]),
+        }
+    }
+
+    fn print_description(&self) {
+        //
+        let mut description: String = String::new();
+
+        match self {
+            Entrance  => description.push_str("You find yourself inside a small circular room made of darkness and stone slab walls.\nAbove; the square of light from which you fell.\nAnd below; more stone tiles - mossy and dripping with the angst of decrepit abandonment.\nThere is an open archway to the South."),
+            Room2     => description.push_str("You find yourself inside a square stone-slabbed room.\nThere is a smattering of destritus on the floor; old boots, ripped clothing, and dry bones.\nThere is an exit to the South."),
+            Largeroom => description.push_str("You find yourself inside a long rectangular room with stone-slabbed walls, mossy this time.\nThere is a long table in the centre of the room, reaching almost to each end.\nIt has many empty plates and tipped wooden cups.\nHow did they get all of this down here??\nThere are exits to the northwest and northeast."),
+            Room4     => description.push_str("You find yourself inside a square room with stone-slabbed walls.\nThere is a message on the wall, written in oxidised brown blood:\n'YOU ARE ALREADY DEAD'\nThere are exits to the North, South, and East."),
+            Sideroom  => description.push_str("You find yourself inside a square room with stone-slabbed walls.\nThis is the most barren of all the rooms.\nThere is naught but bones.\nThere is an exit to the West",),
+            Exit      => description.push_str("You find yourself inside a circular room with stone-slabbed walls.\nThere are skeletons lain against the walls, with a large pile of human bones and clothing piled against the west wall.\nYou feel a slight chilling breeze coming from the north wall.\nThere is an exit to the South"),
+        }
+        println!("{description}");
+    }
+
+    fn print_investigation(&self) {
+        let mut description: String = String::new();
+
+        match self {
+            Sideroom  => description.push_str("One brick seems outlined with cleanliness.\nYou take a closer look and find that it is loose.\nWith a firm grip you dislodge the brick and find a key.\nYou place this in your pocket.\n"),
+            Exit      => description.push_str("Using the moisture clung to your skin, following the light wind, you find that one particular crack is hiding a secret.\nThere is no peep of light, but perhaps something thin could be squeezed in?"),
+            _         => description.push_str("You find nothing of note"),
+        }
+        println!("{description}");
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+
+pub struct Player {
+    room: AllRooms,
     key_in_inventory: bool,
 }
 
-impl Player<'_> {
-    fn new() -> Self {
+impl Player {
+    const fn new() -> Self {
         Self {
-            room: &ENTRANCE,
+            room: Entrance,
             key_in_inventory: false,
         }
     }
 
     fn change_room(&mut self, desired_direction: &str) {
-        let room_name = self.room.name.as_str();
-        match (room_name, desired_direction) {
-            // All valid room transitions listed
-            ("room2", "north") => self.room = &ENTRANCE,
-            ("room2" | "room4", "south") => self.room = &LARGEROOM,
-            ("entrance", "south") | ("largeroom", "northwest") => self.room = &ROOM2,
-            ("largeroom", "northeast") | ("sideroom", "west") => self.room = &ROOM4,
-            ("room4", "north") => self.room = &EXIT,
-            ("room4", "east") => self.room = &SIDEROOM,
-            (_, _) => {
-                println!("That is not a valid room");
-                return; // Exit if invalid
+        // user inputs a direction after "go" command => go [direction]
+        let desired_direction = find_intended_direction(&desired_direction.replace(' ', "")); // map the [direction] to an Result<MovementDirection> variant
+
+        match desired_direction {
+            // match the Result<>
+            Ok(desired_direction) => {
+                // valid MovementDirection
+                for (valid_direction, new_room) in self.room.find_valid_exits() {
+                    // get hashmap of tuples of (valid exit, room that is through that exit)
+                    if valid_direction == desired_direction {
+                        self.room = new_room;
+                        self.room.print_description();
+                    }
+                }
+                println!("There is no door in that direction."); // valid input but no applicable exits
             }
+            Err(msg) => println!("{msg}"), // user input gibberish direction
         }
-        println!("{}", self.room.description.clone());
     }
 
     fn use_item(&self) {
-        if self.key_in_inventory && self.room.name.clone() == "exit" {
+        if self.key_in_inventory && self.room == Exit {
             println!(
                 "
             You put the key into the crack with an expectant grunt.
             Nothing happens...
             Until it does and the wall opens up on a swivel!
+
+            CONGRATULATIONS
             "
             );
-            exit(0);
+            exit(0)
+        } else {
+            println!("You have nothing to use here");
         }
     }
 
     fn investigate(&mut self) {
-        println!("{:?}", self.room.investigation_text.clone());
-        if self.room.name.clone() == "sideroom" {
+        self.room.print_investigation();
+        if self.room == Sideroom {
             self.key_in_inventory = true;
         }
     }
@@ -173,8 +154,8 @@ impl Player<'_> {
             "investigate" => self.investigate(),
             "use" => self.use_item(),
             "inventory" => self.inventory(),
-            "help" => Player::<'_>::help(),
-            _ => println!("Invalid action"),
+            "help" => Self::help(),
+            _ => println!("Invalid action. Please try again."),
         }
     }
 }
@@ -203,9 +184,23 @@ fn second_word(s: &str) -> &str {
     s
 }
 
+fn find_intended_direction(desired_direction: &str) -> Result<MovementDirection, &'static str> {
+    match desired_direction {
+        "north" => Ok(North),
+        "south" => Ok(South),
+        "east" => Ok(East),
+        "west" => Ok(West),
+        "northeast" => Ok(Northeast),
+        "northwest" => Ok(Northwest),
+        "southeast" => Ok(Southeast),
+        "southwest" => Ok(Southwest),
+        _ => Err("That is not a valid direction. Please try again."),
+    }
+}
+
 fn main() {
     let mut player = Player::new();
-    println!("{}", player.room.description.clone());
+    player.room.print_description();
 
     loop {
         let mut desired_action: String = String::new();
@@ -214,7 +209,7 @@ fn main() {
             .read_line(&mut desired_action)
             .expect("Failed to read line");
 
-        let desired_action: String = match desired_action.trim().parse() {
+        let desired_action: String = match desired_action.to_lowercase().trim().parse() {
             Ok(num) => num,
             Err(_) => continue,
         };
