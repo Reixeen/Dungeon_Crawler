@@ -140,11 +140,11 @@ impl Player {
     fn help() {
         println!(
             "
-        investigate, // Investigate the room for useful information + clues
-        go,          // Go to a different room
-        use,         // Open a door or container
-        inventory,   // View contents of inventory
-        help,        // View this menu"
+        investigate,    // Investigate the room for useful information + clues
+        go [direction], // Go to the room in [direction] i.e: northeast
+        use,            // Use item in inventory
+        inventory,      // View contents of inventory
+        help,           // View this menu"
         );
     }
 
